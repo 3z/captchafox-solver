@@ -1,21 +1,68 @@
-# captchafox-solver
+<p align="center">
+  <img src="docs/assets/logo.svg" width="110" alt="CaptchaFox" />
+</p>
 
-A pure-Python solver for [CaptchaFox](https://captchafox.com) challenges. It
-replays a real-Chrome browser attestation, solves the proof-of-work, and solves
-the slide challenge against the CaptchaFox API to obtain a verified response
-token — **no browser is used in the runtime path.**
+<h1 align="center">captchafox-solver</h1>
 
-> **For authorized security testing only.** Use solely against systems you own
-> or are explicitly authorized to test (e.g. a sanctioned engagement with the
-> site operator and CaptchaFox). Automating CaptchaFox on third-party services
-> without authorization may violate their terms and applicable law. See
-> [Responsible use](#responsible-use).
+<p align="center">
+  A pure-Python <a href="https://captchafox.com">CaptchaFox</a> challenge solver —
+  attestation replay, proof-of-work, and slide solving.
+  <br/>
+  No browser is used in the runtime path.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-yellow.svg"></a>
+  <img alt="Python" src="https://img.shields.io/badge/python-3.10+-blue.svg">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-blue.svg">
+  <img alt="Status" src="https://img.shields.io/badge/status-beta-orange.svg">
+  <img alt="Use" src="https://img.shields.io/badge/use-authorized%20testing%20only-red.svg">
+</p>
+
+<p align="center"><em>For authorized security testing only.</em></p>
+
+---
+
+## Table of contents
+
+- [Overview](#overview)
+- [How it works](#how-it-works)
+- [Install](#install)
+- [Quickstart](#quickstart)
+- [CLI](#cli)
+- [Public API](#public-api)
+- [Public test keys](#public-test-keys)
+- [Responsible use](#responsible-use)
+- [License](#license)
+
+## Overview
+
+`captchafox-solver` obtains verified CaptchaFox response tokens by reproducing
+each layer of the widget's challenge flow in pure Python: it replays a
+real-Chrome browser attestation (`cs`), solves the proof-of-work, and solves
+the slide challenge by detecting the puzzle gap in the background image — then
+verifies the answer against the CaptchaFox API.
+
+```mermaid
+flowchart TD
+    A["fetch_config<br/>GET /captcha/{sk}/config"] --> B["build_attestation<br/>replay Chrome cs<br/>+ per-user profile"]
+    B --> C["challenge<br/>POST /captcha/{sk}/challenge<br/>cs + k"]
+    C --> D{"token in<br/>response?"}
+    D -- yes --> T(("return<br/>token"))
+    D -- no --> E["solve proof-of-work<br/>SHA-256 leading zeros"]
+    E --> F["detect slide gap<br/>dominant-color deviation<br/>on background image"]
+    F --> G["synthesize trail<br/>ease-in-out + jitter"]
+    G --> H["verify<br/>POST /captcha/verify<br/>sk, mv, t, p, h, cs, k"]
+    H --> T
+```
+
+The solver talks to `mam-api.captchafox.com` (the host used by the mail.com
+UICDN build) and validates tokens via the public `api.captchafox.com/siteverify`.
 
 ## How it works
 
-CaptchaFox binds token issuance to a browser attestation object (`cs`,
-fields `CF0100`–`CF0148`), a proof-of-work nonce, and interactive challenge
-telemetry. This library reimplements each layer in Python:
+CaptchaFox binds token issuance to a browser attestation object, a proof-of-work
+nonce, and interactive challenge telemetry. This library reimplements each layer:
 
 | Layer | Implementation |
 | --- | --- |
@@ -24,23 +71,18 @@ telemetry. This library reimplements each layer in Python:
 | **Slide challenge** | The puzzle-piece gap left edge is detected in the background image via dominant-color column deviation (Pillow + NumPy), then mapped to CSS pixels. A human-like movement trail (ease-in-out + jitter, max 80 samples) is synthesized. |
 | **Transport** | The custom `text/plain` body encoding (JSON → gzip → prefix `[0x01, 0x04]` → per-byte XOR) and the `X-Pulse` header are reproduced. |
 
-The solver talks to `mam-api.captchafox.com` (the host used by the mail.com
-UICDN build) and validates tokens via the public `api.captchafox.com/siteverify`.
-
 ## Install
 
 ```bash
 pip install .
-# editable, for development:
-pip install -e ".[dev]"
 ```
 
 Requires Python ≥ 3.10, plus `requests`, `Pillow`, and `numpy`.
 
-## Quickstart (Python API)
+## Quickstart
 
 ```python
-from captchafox_solver import CaptchaFoxSolver, CaptchaFoxClient
+from captchafox_solver import CaptchaFoxSolver
 
 SITE_KEY = "sk_11111111000000001111111100000000"  # public always-succeed test key
 
@@ -96,7 +138,7 @@ print("accepted" if "challenge" in challenge or "token" in challenge else "rejec
 captchafox-solver test
 
 # Solve against a sitekey (random profile per run)
-captchafox-solver solve --site-key sk_... 
+captchafox-solver solve --site-key sk_...
 
 # Probe attestation acceptance only
 captchafox-solver solve --site-key sk_... --probe
@@ -133,7 +175,8 @@ This project is intended for authorized security testing, red-team
 engagements, and CaptchaFox/mail.com resilience research where you have
 written authorization from the site operator and the captcha provider.
 Standard practice is to test privately and coordinate disclosure with the
-vendor before any public discussion of findings. Do not use this to automate
+vendor before any public discussion of findings. See
+[SECURITY.md](SECURITY.md) for the full policy. Do not use this to automate
 account creation or abuse services you do not own or are not authorized to test.
 
 ## License
