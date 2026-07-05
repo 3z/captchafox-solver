@@ -151,7 +151,7 @@ captchafox-solver verify --token TOKEN --secret ok_... --sitekey sk_...
 
 | Symbol | Purpose |
 | --- | --- |
-| `CaptchaFoxSolver` | End-to-end solver: `solve()` → token, `probe()` → challenge response. |
+| `CaptchaFoxSolver` | End-to-end solver: `solve(max_attempts=...)` → token (retries on failure), `probe()` → challenge response. |
 | `CaptchaFoxClient` | Low-level protocol client: `fetch_config`, `challenge`, `verify`, `verify_token`, `get_test_token`. |
 | `build_attestation(site, profile=...)` | Build a `cs` attestation object; varies per-user fields when a profile is given. |
 | `AttestationProfile` / `random_attestation_profile()` | Self-consistent per-user fingerprint profile and a random factory. |

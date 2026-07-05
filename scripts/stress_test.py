@@ -61,11 +61,11 @@ def _make_client(proxy: str | None, timeout: int) -> CaptchaFoxClient:
     return CaptchaFoxClient(http=session, timeout=timeout)
 
 
-def _solve_one(site_key: str, site: str, proxy: str | None, timeout: int) -> dict:
+def _solve_one(site_key: str, site: str, proxy: str | None, timeout: int, max_attempts: int) -> dict:
     solver = CaptchaFoxSolver(client=_make_client(proxy, timeout), site_key=site_key, site=site)
     t0 = time.time()
     try:
-        token = solver.solve()
+        token = solver.solve(max_attempts=max_attempts)
         return {"ok": True, "token": token, "elapsed": time.time() - t0}
     except Exception as exc:  # noqa: BLE001 - record any failure
         return {"ok": False, "error": str(exc)[:200], "elapsed": time.time() - t0}
@@ -85,16 +85,17 @@ def main() -> int:
     parser.add_argument("--site", default=DEFAULT_CAPTCHAFOX_SITE, help="Page site URL")
     parser.add_argument("--proxy", default=os.getenv("CAPTCHAFOX_PROXY"), help="HTTP proxy URL (or env CAPTCHAFOX_PROXY)")
     parser.add_argument("--request-timeout", type=int, default=20, help="Per-request timeout seconds (default 20)")
+    parser.add_argument("--max-attempts", type=int, default=3, help="Solve retries per attempt (default 3)")
     parser.add_argument("--output", default=None, help="Write JSON summary to this path")
     parser.add_argument("--tglog", action="store_true", help="Send the summary to tglog")
     args = parser.parse_args()
 
-    print(f"stress test: total={args.total} workers={args.workers} proxy={'yes' if args.proxy else 'no'}")
+    print(f"stress test: total={args.total} workers={args.workers} max_attempts={args.max_attempts} proxy={'yes' if args.proxy else 'no'}")
     results: list[dict] = []
     start = time.time()
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = [
-            pool.submit(_solve_one, args.site_key, args.site, args.proxy, args.request_timeout)
+            pool.submit(_solve_one, args.site_key, args.site, args.proxy, args.request_timeout, args.max_attempts)
             for _ in range(args.total)
         ]
         for i, fut in enumerate(concurrent.futures.as_completed(futures), 1):

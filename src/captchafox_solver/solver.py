@@ -64,8 +64,24 @@ class CaptchaFoxSolver:
             config, challenge_type=self.challenge_type, cs=cs, k=k, lang=self.lang
         )
 
-    def solve(self) -> str:
-        """Run the full flow and return a verified response token."""
+    def solve(self, max_attempts: int = 1) -> str:
+        """Run the full flow and return a verified response token.
+
+        Retries up to ``max_attempts`` times on any failure (e.g. ``solved:
+        False`` from a missed slide gap, or a transient proxy/network error).
+        Each attempt mints a fresh attestation profile and challenge.
+        """
+        last_error: Exception | None = None
+        for _ in range(max_attempts):
+            try:
+                return self._solve_once()
+            except Exception as exc:  # noqa: BLE001 - retry on any failure
+                last_error = exc
+        assert last_error is not None
+        raise last_error
+
+    def _solve_once(self) -> str:
+        """Single attempt of the full solve flow."""
         config = self.client.fetch_config(self.site_key, self.site)
         cs = build_attestation(self.site, profile=self._new_profile())
         h: str = config.h
