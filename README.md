@@ -2,7 +2,7 @@
   <img src="docs/assets/logo.svg" width="110" alt="CaptchaFox" />
 </p>
 
-<h1 align="center">CaptchFox Solver</h1>
+<h1 align="center">CaptchaFox Solver</h1>
 
 <p align="center">
   A pure-Go <a href="https://captchafox.com">CaptchaFox</a> challenge solver —
