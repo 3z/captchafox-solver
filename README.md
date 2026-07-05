@@ -101,7 +101,6 @@ token, err := solver.Solve(3) // max 3 retry attempts
 | Package | Description |
 | --- | --- |
 | `captchafox/` | The solver (PoW, encoding, attestation, client, slide gap detection, trail synthesis). |
-| `cdp/` | Lightweight CDP (Chrome DevTools Protocol) client for making requests through a real headless Chrome instance (exact Chrome TLS/HTTP-2 fingerprint). Includes a proxy relay for authenticated upstream proxies. |
 
 ## Public test keys
 
