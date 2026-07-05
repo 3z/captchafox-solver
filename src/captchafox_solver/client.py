@@ -56,16 +56,18 @@ class CaptchaFoxClient:
         self,
         http: requests.Session | None = None,
         user_agent: str = DEFAULT_CAPTCHAFOX_USER_AGENT,
+        timeout: int = DEFAULT_TIMEOUT,
     ) -> None:
         self.http = http or requests.Session()
         self.user_agent = user_agent
+        self.timeout = timeout
 
     def fetch_config(self, site_key: str, site: str = DEFAULT_CAPTCHAFOX_SITE) -> CaptchaFoxConfig:
         response = self.http.get(
             f"{CAPTCHAFOX_API_BASE}/captcha/{site_key}/config",
             params={"site": site},
             headers=self._headers(site),
-            timeout=DEFAULT_TIMEOUT,
+            timeout=self.timeout,
         )
         _raise_captchafox(response, "CaptchaFox config")
         return CaptchaFoxConfig(site_key=site_key, site=site, raw=response.json())
@@ -90,7 +92,7 @@ class CaptchaFoxClient:
             f"{CAPTCHAFOX_API_BASE}/captcha/{config.site_key}/challenge",
             data=encode_captchafox_payload(payload),
             headers={**self._headers(config.site), "Content-Type": "text/plain"},
-            timeout=DEFAULT_TIMEOUT,
+            timeout=self.timeout,
         )
         _raise_captchafox(response, "CaptchaFox challenge")
         return response.json()
@@ -104,7 +106,7 @@ class CaptchaFoxClient:
             f"{CAPTCHAFOX_API_BASE}/captcha/verify",
             data=encode_captchafox_payload(payload),
             headers={**self._headers(site), "Content-Type": "text/plain"},
-            timeout=DEFAULT_TIMEOUT,
+            timeout=self.timeout,
         )
         _raise_captchafox(response, "CaptchaFox verify")
         return response.json()
@@ -126,7 +128,7 @@ class CaptchaFoxClient:
             CAPTCHAFOX_SITEVERIFY_URL,
             data=data,
             headers={"User-Agent": self.user_agent},
-            timeout=DEFAULT_TIMEOUT,
+            timeout=self.timeout,
         )
         _raise_captchafox(http_response, "CaptchaFox siteverify")
         return http_response.json()
