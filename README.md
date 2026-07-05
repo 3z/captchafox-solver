@@ -2,7 +2,7 @@
   <img src="docs/assets/logo.svg" width="110" alt="CaptchaFox" />
 </p>
 
-<h1 align="center">captchafox-solver</h1>
+<h1 align="center">CaptchFox Solver</h1>
 
 <p align="center">
   A pure-Go <a href="https://captchafox.com">CaptchaFox</a> challenge solver —
@@ -16,10 +16,7 @@
   <img alt="Go" src="https://img.shields.io/badge/Go-1.23+-00ADD8.svg">
   <img alt="Version" src="https://img.shields.io/badge/version-0.2.0-blue.svg">
   <img alt="Status" src="https://img.shields.io/badge/status-beta-orange.svg">
-  <img alt="Use" src="https://img.shields.io/badge/use-authorized%20testing%20only-red.svg">
 </p>
-
-<p align="center"><em>For authorized security testing only.</em></p>
 
 ---
 
@@ -110,13 +107,6 @@ CaptchaFox publishes always-succeed test keys for integration testing:
 sitekey: sk_11111111000000001111111100000000
 secret:  ok_11111111000000001111111100000000
 ```
-
-## Responsible use
-
-This project is intended for authorized security testing, red-team
-engagements, and CaptchaFox resilience research where you have written
-authorization from the site operator and the captcha provider. See
-[SECURITY.md](SECURITY.md) for the full policy.
 
 ## License
 
