@@ -1,4 +1,5 @@
-*.exe
 captchafox-solver
+*.exe
 go-sdk/
 state.json
+__debug_bin*
